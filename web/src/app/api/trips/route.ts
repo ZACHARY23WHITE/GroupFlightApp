@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { generateShareCode } from "@/lib/share-code";
+import { createTrip } from "@/lib/firestore-trips";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -25,20 +24,12 @@ export async function POST(req: Request) {
     );
   }
 
-  for (let i = 0; i < 8; i++) {
-    const shareCode = generateShareCode();
-    try {
-      const trip = await prisma.trip.create({
-        data: { name, shareCode },
-      });
-      return NextResponse.json({ id: trip.id, shareCode: trip.shareCode });
-    } catch {
-      continue;
-    }
+  try {
+    const trip = await createTrip(name);
+    return NextResponse.json({ id: trip.id, shareCode: trip.shareCode });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("POST /api/trips:", e);
+    return NextResponse.json({ error: msg }, { status: 503 });
   }
-
-  return NextResponse.json(
-    { error: "Could not allocate a share code. Try again." },
-    { status: 503 }
-  );
 }

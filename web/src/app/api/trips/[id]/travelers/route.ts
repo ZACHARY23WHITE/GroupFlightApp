@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createTraveler, tripExists } from "@/lib/firestore-trips";
 import { normalizeIata } from "@/lib/iata";
 import { CABIN_OPTIONS } from "@/lib/travel-class";
 
@@ -33,8 +33,8 @@ function parsePartyInt(
 export async function POST(req: Request, ctx: Ctx) {
   const { id: tripId } = await ctx.params;
 
-  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
-  if (!trip) {
+  const exists = await tripExists(tripId);
+  if (!exists) {
     return NextResponse.json({ error: "Trip not found" }, { status: 404 });
   }
 
@@ -81,8 +81,12 @@ export async function POST(req: Request, ctx: Ctx) {
       ? cabinRaw
       : "economy";
 
-  const traveler = await prisma.traveler.create({
-    data: { tripId, displayName, homeAirport, adults, children, cabinClass },
+  const traveler = await createTraveler(tripId, {
+    displayName,
+    homeAirport,
+    adults,
+    children,
+    cabinClass,
   });
 
   return NextResponse.json({

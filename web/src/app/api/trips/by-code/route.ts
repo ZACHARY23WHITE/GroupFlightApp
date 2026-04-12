@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getTripIdByShareCode } from "@/lib/firestore-trips";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -8,14 +8,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing code" }, { status: 400 });
   }
 
-  const trip = await prisma.trip.findUnique({
-    where: { shareCode: raw },
-    select: { id: true },
-  });
+  const id = await getTripIdByShareCode(raw);
 
-  if (!trip) {
+  if (!id) {
     return NextResponse.json({ error: "No trip with that code." }, { status: 404 });
   }
 
-  return NextResponse.json({ id: trip.id });
+  return NextResponse.json({ id });
 }

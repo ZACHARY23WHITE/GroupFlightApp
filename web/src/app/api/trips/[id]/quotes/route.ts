@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getTripWithTravelers } from "@/lib/firestore-trips";
 import { resolveFlyInto } from "@/lib/resolve-fly-into";
 import { demoFlightOptions } from "@/lib/demo-flights";
 import { buildGoogleFlightsFltUrl } from "@/lib/google-flights-url";
@@ -30,10 +30,7 @@ export type QuoteRowResponse = {
 export async function POST(req: Request, ctx: Ctx) {
   const { id: tripId } = await ctx.params;
 
-  const trip = await prisma.trip.findUnique({
-    where: { id: tripId },
-    include: { travelers: true },
-  });
+  const trip = await getTripWithTravelers(tripId);
 
   if (!trip) {
     return NextResponse.json({ error: "Trip not found" }, { status: 404 });

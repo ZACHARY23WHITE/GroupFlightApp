@@ -1,15 +1,14 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { getTripWithTravelers } from "@/lib/firestore-trips";
 import { TripWorkspace } from "./trip-workspace";
+
+export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function TripPage({ params }: PageProps) {
   const { id } = await params;
-  const trip = await prisma.trip.findUnique({
-    where: { id },
-    include: { travelers: { orderBy: { createdAt: "asc" } } },
-  });
+  const trip = await getTripWithTravelers(id);
 
   if (!trip) notFound();
 

@@ -1,2 +1,6 @@
 .DS_Store
 *.icloud
+
+# Accidental npm at repo root (app lives in web/)
+/node_modules/
+/package-lock.json

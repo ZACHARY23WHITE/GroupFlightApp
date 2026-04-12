@@ -1,0 +1,8 @@
+# Firebase App Hosting — https://firebase.google.com/docs/app-hosting
+#
+# If this file lives in web/, the GitHub-connected backend MUST use root directory: web
+# (Console → App Hosting → backend → Settings → Deployment → Root directory).
+# Repo root has no package.json; default "/" breaks the build (often exit code 21).
+runConfig:
+  minInstances: 0
+  maxInstances: 10

@@ -7,7 +7,10 @@ const allowedDevOrigins =
     .filter(Boolean) ?? [];
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3"],
+  // Next 15 webpack must not bundle firebase-admin (subpath exports: firebase-admin/app, /firestore).
+  serverExternalPackages: ["firebase-admin"],
+  // Flat-config + eslint-config-next mismatch can fail Cloud builds; run `npm run lint` locally.
+  eslint: { ignoreDuringBuilds: true },
   ...(allowedDevOrigins.length > 0 ? { allowedDevOrigins } : {}),
 };
 

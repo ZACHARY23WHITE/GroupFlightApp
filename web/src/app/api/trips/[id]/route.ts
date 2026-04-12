@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getTripWithTravelers, updateTripName } from "@/lib/firestore-trips";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, ctx: Ctx) {
   const { id } = await ctx.params;
-  const trip = await prisma.trip.findUnique({
-    where: { id },
-    include: {
-      travelers: { orderBy: { createdAt: "asc" } },
-    },
-  });
+  const trip = await getTripWithTravelers(id);
 
   if (!trip) {
     return NextResponse.json({ error: "Trip not found" }, { status: 404 });
@@ -55,28 +50,21 @@ export async function PATCH(req: Request, ctx: Ctx) {
     );
   }
 
-  try {
-    const trip = await prisma.trip.update({
-      where: { id },
-      data: { name },
-      include: {
-        travelers: { orderBy: { createdAt: "asc" } },
-      },
-    });
-    return NextResponse.json({
-      id: trip.id,
-      name: trip.name,
-      shareCode: trip.shareCode,
-      travelers: trip.travelers.map((t) => ({
-        id: t.id,
-        displayName: t.displayName,
-        homeAirport: t.homeAirport,
-        adults: t.adults,
-        children: t.children,
-        cabinClass: t.cabinClass,
-      })),
-    });
-  } catch {
+  const trip = await updateTripName(id, name);
+  if (!trip) {
     return NextResponse.json({ error: "Trip not found" }, { status: 404 });
   }
+  return NextResponse.json({
+    id: trip.id,
+    name: trip.name,
+    shareCode: trip.shareCode,
+    travelers: trip.travelers.map((t) => ({
+      id: t.id,
+      displayName: t.displayName,
+      homeAirport: t.homeAirport,
+      adults: t.adults,
+      children: t.children,
+      cabinClass: t.cabinClass,
+    })),
+  });
 }
