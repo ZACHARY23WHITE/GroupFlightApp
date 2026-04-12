@@ -32,6 +32,10 @@ In [Firebase Console](https://console.firebase.google.com/) → **App Hosting**,
 
 Configure environment variables (same as `.env`) in the backend **Environment** section. See `apphosting.yaml`.
 
+`next.config.ts` uses **`output: 'standalone'`**, which Firebase App Hosting / Cloud Run expects for Next.js.
+
+If a rollout still fails, open **Google Cloud Console → Cloud Build → History**, click the failed build, and search the log for **`error`** / **`ERR!`** — paste that snippet if you need help.
+
 ## Data model
 
 - Collection **`trips`**: `name`, `shareCode`, `createdAt`
