@@ -30,11 +30,13 @@ In [Firebase Console](https://console.firebase.google.com/) → **App Hosting**,
 
 **Root directory must be `web`** (Settings → Deployment). The repository root only has `README` / `.gitignore`; `package.json` is inside `web/`. If root is `/`, the build fails with an opaque error (e.g. Docker step exit **21**).
 
-Configure environment variables (same as `.env`) in the backend **Environment** section. See `apphosting.yaml`.
+Configure environment variables (same as `.env`) in the backend **Environment** section.
+
+**Important:** Every variable there must have a **Value** *or* a **Secret** linked. If you started adding a variable but left the value empty, delete that row — otherwise the build fails with **`Invalid apphosting.yaml`** / *“either 'value' or 'secret' field is required”*.
 
 `next.config.ts` uses **`output: 'standalone'`**, which Firebase App Hosting / Cloud Run expects for Next.js.
 
-If a rollout still fails, open **Google Cloud Console → Cloud Build → History**, click the failed build, and search the log for **`error`** / **`ERR!`** — paste that snippet if you need help.
+If a rollout still fails, open **Google Cloud Console → Cloud Build → History**, click the failed build, and search the log for **`error`** / **`ERR!`**.
 
 ## Data model
 
