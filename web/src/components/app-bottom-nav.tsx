@@ -56,7 +56,7 @@ function ProfileIcon({ active }: { active: boolean }) {
 function ExploreIcon({ active }: { active: boolean }) {
   return (
     <svg
-      className={`h-5 w-5 ${active ? "text-rose-600" : "text-stone-400"}`}
+      className={`h-6 w-6 ${active ? "text-rose-600" : "text-stone-400"}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -91,11 +91,11 @@ export function AppBottomNav() {
         role="navigation"
         aria-label="Main navigation"
       >
-        <div className="mx-auto flex max-w-lg flex-col px-1 pt-1">
-          <div className="grid grid-cols-3 items-end">
+        <div className="mx-auto max-w-lg px-0.5 pt-1 sm:px-1">
+          <div className="grid grid-cols-4 items-end gap-0">
             <Link
               href="/"
-              className={`flex flex-col items-center gap-0.5 rounded-lg py-2 transition-colors ${
+              className={`flex min-w-0 flex-col items-center gap-0.5 rounded-lg py-2 transition-colors ${
                 onHome ? "text-rose-600" : "text-stone-500 hover:text-stone-800"
               }`}
             >
@@ -109,7 +109,7 @@ export function AppBottomNav() {
               <button
                 type="button"
                 onClick={() => setSheetOpen(true)}
-                className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-rose-600 text-2xl font-light leading-none text-white shadow-lg shadow-rose-900/25 transition-transform hover:scale-105 active:scale-95"
+                className="-mt-6 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-rose-600 text-2xl font-light leading-none text-white shadow-lg shadow-rose-900/25 transition-transform hover:scale-105 active:scale-95"
                 aria-label="Create new trip or join with a code"
               >
                 <span aria-hidden>+</span>
@@ -117,8 +117,22 @@ export function AppBottomNav() {
             </div>
 
             <Link
+              href="/explore"
+              className={`flex min-w-0 flex-col items-center gap-0.5 rounded-lg py-2 transition-colors ${
+                onExplore
+                  ? "text-rose-600"
+                  : "text-stone-500 hover:text-stone-800"
+              }`}
+            >
+              <ExploreIcon active={onExplore} />
+              <span className="max-w-[4.5rem] text-center text-[10px] font-semibold leading-tight tracking-wide">
+                Explore options
+              </span>
+            </Link>
+
+            <Link
               href="/profile"
-              className={`flex flex-col items-center gap-0.5 rounded-lg py-2 transition-colors ${
+              className={`flex min-w-0 flex-col items-center gap-0.5 rounded-lg py-2 transition-colors ${
                 onProfile
                   ? "text-rose-600"
                   : "text-stone-500 hover:text-stone-800"
@@ -130,20 +144,6 @@ export function AppBottomNav() {
               </span>
             </Link>
           </div>
-
-          <Link
-            href="/explore"
-            className={`mt-0.5 flex flex-col items-center gap-0.5 rounded-lg py-2 transition-colors ${
-              onExplore
-                ? "text-rose-600"
-                : "text-stone-500 hover:text-stone-800"
-            }`}
-          >
-            <ExploreIcon active={onExplore} />
-            <span className="text-[10px] font-semibold tracking-wide">
-              Explore options
-            </span>
-          </Link>
         </div>
         <div className="h-2 shrink-0" aria-hidden />
       </nav>

@@ -41,7 +41,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-stone-50 text-stone-800 selection:bg-rose-100/80">
         <AuthProvider>
           <AppHeader />
-          <div className="flex min-h-0 flex-1 flex-col pb-[calc(8.25rem+env(safe-area-inset-bottom))]">
+          <div className="flex min-h-0 flex-1 flex-col pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
             {children}
           </div>
           <AppBottomNav />
