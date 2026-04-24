@@ -87,6 +87,7 @@ export function AppBottomNav() {
     <>
       <TripActionsSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
       <nav
+        data-layout="nav-cols-4-explore-between-plus-profile"
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-stone-200/90 bg-stone-50/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_rgb(15_15_15/0.06)] backdrop-blur-md"
         role="navigation"
         aria-label="Main navigation"
