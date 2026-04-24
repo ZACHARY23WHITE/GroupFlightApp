@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { appendTripActivity } from "@/lib/firestore-trip-collab";
 import { createTraveler, tripExists } from "@/lib/firestore-trips";
+import { rememberTripForUser } from "@/lib/firestore-user-trips";
 import { normalizeIata } from "@/lib/iata";
+import { verifyBearerUid } from "@/lib/verify-bearer";
 import { CABIN_OPTIONS } from "@/lib/travel-class";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -32,6 +35,7 @@ function parsePartyInt(
 
 export async function POST(req: Request, ctx: Ctx) {
   const { id: tripId } = await ctx.params;
+  const uid = await verifyBearerUid(req);
 
   const exists = await tripExists(tripId);
   if (!exists) {
@@ -88,6 +92,19 @@ export async function POST(req: Request, ctx: Ctx) {
     children,
     cabinClass,
   });
+
+  void appendTripActivity(
+    tripId,
+    `${displayName} joined the trip (flying from ${homeAirport}).`
+  ).catch((e) => console.error("appendTripActivity:", e));
+
+  if (uid) {
+    try {
+      await rememberTripForUser(uid, tripId);
+    } catch (e) {
+      console.error("rememberTripForUser after traveler:", e);
+    }
+  }
 
   return NextResponse.json({
     id: traveler.id,

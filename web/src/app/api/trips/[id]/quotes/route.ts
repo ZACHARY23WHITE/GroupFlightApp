@@ -187,6 +187,66 @@ export async function POST(req: Request, ctx: Ctx) {
     }
   }
 
+  type PartyFairness = {
+    travelerId: string;
+    displayName: string;
+    adults: number;
+    children: number;
+    cheapestPartyTotal: number | null;
+    currency: string | null;
+    hasQuote: boolean;
+  };
+
+  const parties: PartyFairness[] = rows.map((r) => {
+    const first = r.options[0];
+    const n = first ? Number.parseFloat(first.price) : NaN;
+    const cheapest = Number.isFinite(n) ? n : null;
+    return {
+      travelerId: r.travelerId,
+      displayName: r.displayName,
+      adults: r.adults,
+      children: r.children,
+      cheapestPartyTotal: cheapest,
+      currency: r.currency,
+      hasQuote: Boolean(first && cheapest !== null),
+    };
+  });
+
+  const priced = parties.filter(
+    (p): p is PartyFairness & { cheapestPartyTotal: number } =>
+      p.cheapestPartyTotal !== null
+  );
+  const values = priced.map((p) => p.cheapestPartyTotal).sort((a, b) => a - b);
+  const medianCheapest =
+    values.length === 0
+      ? null
+      : values.length % 2 === 1
+        ? values[(values.length - 1) / 2]!
+        : (values[values.length / 2 - 1]! + values[values.length / 2]!) / 2;
+  const minV = values.length ? values[0]! : null;
+  const maxV = values.length ? values[values.length - 1]! : null;
+  const spread =
+    minV !== null && maxV !== null ? Math.max(0, maxV - minV) : null;
+  const lowest = priced.find((p) => p.cheapestPartyTotal === minV);
+  const highest = priced.find((p) => p.cheapestPartyTotal === maxV);
+
+  const fairness = {
+    parties,
+    medianCheapest:
+      medianCheapest !== null ? medianCheapest.toFixed(2) : null,
+    spread: spread !== null ? spread.toFixed(2) : null,
+    lowestPartyName: lowest?.displayName ?? null,
+    highestPartyName: highest?.displayName ?? null,
+    relativeSpreadPercent:
+      spread !== null && medianCheapest !== null && medianCheapest > 0
+        ? ((spread / medianCheapest) * 100).toFixed(0)
+        : null,
+    note:
+      priced.length < 2
+        ? "Add quotes for at least two travelers to compare how costs spread across parties."
+        : "Each amount is the cheapest shown fare for that traveler’s party (adults + children), not per person. Spread is highest minus lowest party total — a rough fairness signal when origins differ.",
+  };
+
   return NextResponse.json({
     source,
     destination,
@@ -199,5 +259,6 @@ export async function POST(req: Request, ctx: Ctx) {
     groupCurrency,
     groupTotalNote:
       "Sum of each traveler’s cheapest option among the top 3. Each price is for that traveler’s party (adults + children), not one group ticket.",
+    fairness,
   });
 }

@@ -18,6 +18,7 @@ export default async function TripPage({ params }: PageProps) {
         id: trip.id,
         name: trip.name,
         shareCode: trip.shareCode,
+        brief: trip.brief,
         travelers: trip.travelers.map((t) => ({
           id: t.id,
           displayName: t.displayName,

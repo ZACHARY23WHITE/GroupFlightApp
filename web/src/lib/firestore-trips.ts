@@ -2,6 +2,10 @@ import * as admin from "firebase-admin";
 import { nanoid } from "nanoid";
 import { getFirestoreDb } from "@/lib/firebase-server";
 import { generateShareCode } from "@/lib/share-code";
+import {
+  briefFromTripDoc,
+  type TripBriefDto,
+} from "@/lib/firestore-trip-collab";
 
 const FieldValue = admin.firestore.FieldValue;
 
@@ -20,6 +24,7 @@ export type TripDto = {
   id: string;
   name: string;
   shareCode: string;
+  brief: TripBriefDto;
   travelers: TravelerDto[];
 };
 
@@ -52,6 +57,20 @@ export async function tripExists(tripId: string): Promise<boolean> {
   return doc.exists;
 }
 
+/** Lightweight read for syncing user trip lists (name + code only). */
+export async function getTripMeta(
+  tripId: string
+): Promise<{ name: string; shareCode: string } | null> {
+  const doc = await tripsCollection().doc(tripId).get();
+  if (!doc.exists) return null;
+  const data = doc.data();
+  if (!data) return null;
+  return {
+    name: String(data.name ?? ""),
+    shareCode: String(data.shareCode ?? ""),
+  };
+}
+
 export async function getTripWithTravelers(
   tripId: string
 ): Promise<TripDto | null> {
@@ -64,6 +83,7 @@ export async function getTripWithTravelers(
     id: doc.id,
     name: String(data.name ?? ""),
     shareCode: String(data.shareCode ?? ""),
+    brief: briefFromTripDoc(data),
     travelers,
   };
 }

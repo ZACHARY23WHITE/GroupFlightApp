@@ -29,3 +29,243 @@ body {
   background-color: rgb(254 205 211 / 0.6);
   color: #1c1917;
 }
+
+/* Hangar loader: paper planes glide in, vanish inside — continuous loop */
+.hangar-inbound-doodle .hld-plane {
+  animation-duration: 9s;
+  animation-timing-function: cubic-bezier(0.32, 0, 0.14, 1);
+  animation-iteration-count: infinite;
+}
+
+.hangar-inbound-doodle .hld-plane--1 {
+  animation-name: hld-plane-1;
+  animation-delay: 0s;
+}
+.hangar-inbound-doodle .hld-plane--2 {
+  animation-name: hld-plane-2;
+  animation-delay: 1.35s;
+}
+.hangar-inbound-doodle .hld-plane--3 {
+  animation-name: hld-plane-3;
+  animation-delay: 2.7s;
+}
+.hangar-inbound-doodle .hld-plane--4 {
+  animation-name: hld-plane-4;
+  animation-delay: 4.05s;
+}
+.hangar-inbound-doodle .hld-plane--5 {
+  animation-name: hld-plane-5;
+  animation-delay: 5.4s;
+}
+
+.hangar-inbound-doodle .hld-trail {
+  animation: hld-trail 9s cubic-bezier(0.32, 0, 0.14, 1) infinite;
+  opacity: 0;
+}
+.hangar-inbound-doodle .hld-trail--1 {
+  animation-delay: 0s;
+}
+.hangar-inbound-doodle .hld-trail--2 {
+  animation-delay: 1.35s;
+}
+.hangar-inbound-doodle .hld-trail--3 {
+  animation-delay: 2.7s;
+}
+.hangar-inbound-doodle .hld-trail--4 {
+  animation-delay: 4.05s;
+}
+.hangar-inbound-doodle .hld-trail--5 {
+  animation-delay: 5.4s;
+}
+
+@keyframes hld-trail {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.42;
+  }
+  45% {
+    opacity: 0.28;
+  }
+  62% {
+    opacity: 0.12;
+  }
+  74%,
+  99% {
+    opacity: 0;
+  }
+}
+
+@keyframes hld-plane-1 {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(16px, 226px) rotate(26deg) scale(1);
+  }
+  5% {
+    opacity: 1;
+  }
+  28% {
+    transform: translate(118px, 152px) rotate(4deg) scale(1);
+  }
+  52% {
+    transform: translate(184px, 112px) rotate(-4deg) scale(1);
+    opacity: 1;
+  }
+  66% {
+    transform: translate(204px, 96px) rotate(0deg) scale(0.92);
+    opacity: 0.45;
+  }
+  78% {
+    transform: translate(218px, 86px) rotate(0deg) scale(0.78);
+    opacity: 0;
+  }
+  82%,
+  99% {
+    opacity: 0;
+    transform: translate(16px, 226px) rotate(26deg) scale(1);
+  }
+}
+
+@keyframes hld-plane-2 {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(392px, 196px) rotate(-34deg) scale(1);
+  }
+  5% {
+    opacity: 1;
+  }
+  28% {
+    transform: translate(288px, 138px) rotate(-12deg) scale(1);
+  }
+  52% {
+    transform: translate(218px, 106px) rotate(2deg) scale(1);
+    opacity: 1;
+  }
+  66% {
+    transform: translate(198px, 94px) rotate(0deg) scale(0.9);
+    opacity: 0.4;
+  }
+  78% {
+    transform: translate(188px, 88px) rotate(0deg) scale(0.76);
+    opacity: 0;
+  }
+  82%,
+  99% {
+    opacity: 0;
+    transform: translate(392px, 196px) rotate(-34deg) scale(1);
+  }
+}
+
+@keyframes hld-plane-3 {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(198px, 252px) rotate(-90deg) scale(1);
+  }
+  5% {
+    opacity: 1;
+  }
+  28% {
+    transform: translate(200px, 168px) rotate(-38deg) scale(1);
+  }
+  52% {
+    transform: translate(200px, 118px) rotate(-6deg) scale(1);
+    opacity: 1;
+  }
+  66% {
+    transform: translate(200px, 100px) rotate(0deg) scale(0.91);
+    opacity: 0.42;
+  }
+  78% {
+    transform: translate(200px, 90px) rotate(0deg) scale(0.77);
+    opacity: 0;
+  }
+  82%,
+  99% {
+    opacity: 0;
+    transform: translate(198px, 252px) rotate(-90deg) scale(1);
+  }
+}
+
+@keyframes hld-plane-4 {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(28px, 244px) rotate(52deg) scale(1);
+  }
+  5% {
+    opacity: 1;
+  }
+  28% {
+    transform: translate(110px, 172px) rotate(20deg) scale(1);
+  }
+  52% {
+    transform: translate(176px, 116px) rotate(-2deg) scale(1);
+    opacity: 1;
+  }
+  66% {
+    transform: translate(196px, 98px) rotate(0deg) scale(0.9);
+    opacity: 0.38;
+  }
+  78% {
+    transform: translate(208px, 88px) rotate(0deg) scale(0.75);
+    opacity: 0;
+  }
+  82%,
+  99% {
+    opacity: 0;
+    transform: translate(28px, 244px) rotate(52deg) scale(1);
+  }
+}
+
+@keyframes hld-plane-5 {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(352px, 236px) rotate(-48deg) scale(1);
+  }
+  5% {
+    opacity: 1;
+  }
+  28% {
+    transform: translate(278px, 168px) rotate(-22deg) scale(1);
+  }
+  52% {
+    transform: translate(222px, 114px) rotate(4deg) scale(1);
+    opacity: 1;
+  }
+  66% {
+    transform: translate(206px, 98px) rotate(0deg) scale(0.89);
+    opacity: 0.4;
+  }
+  78% {
+    transform: translate(194px, 90px) rotate(0deg) scale(0.74);
+    opacity: 0;
+  }
+  82%,
+  99% {
+    opacity: 0;
+    transform: translate(352px, 236px) rotate(-48deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hangar-inbound-doodle .hld-plane,
+  .hangar-inbound-doodle .hld-trail {
+    animation: none !important;
+  }
+  .hangar-inbound-doodle .hld-trail {
+    opacity: 0.18;
+  }
+  .hangar-inbound-doodle .hld-plane--1,
+  .hangar-inbound-doodle .hld-plane--2,
+  .hangar-inbound-doodle .hld-plane--3,
+  .hangar-inbound-doodle .hld-plane--4,
+  .hangar-inbound-doodle .hld-plane--5 {
+    opacity: 0;
+  }
+}

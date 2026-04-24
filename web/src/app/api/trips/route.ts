@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { createTrip } from "@/lib/firestore-trips";
+import { rememberTripForUser } from "@/lib/firestore-user-trips";
+import { verifyBearerUid } from "@/lib/verify-bearer";
 
 export async function POST(req: Request) {
+  const uid = await verifyBearerUid(req);
   let body: unknown;
   try {
     body = await req.json();
@@ -26,6 +29,13 @@ export async function POST(req: Request) {
 
   try {
     const trip = await createTrip(name);
+    if (uid) {
+      try {
+        await rememberTripForUser(uid, trip.id);
+      } catch (e) {
+        console.error("rememberTripForUser after create:", e);
+      }
+    }
     return NextResponse.json({ id: trip.id, shareCode: trip.shareCode });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";

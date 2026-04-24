@@ -1,80 +1,80 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
-
-const inputClass =
-  "w-full rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-stone-900 shadow-sm placeholder:text-stone-400 transition-colors focus:border-rose-300 focus:outline-none focus:ring-4 focus:ring-rose-100/80";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
+import {
+  PROFILE_SESSION_EVENT,
+  dismissOnboardingPrompt,
+  fetchProfile,
+  isOnboardingPromptDismissed,
+  isSessionActive,
+} from "@/lib/profile-client";
+import {
+  MY_TRIPS_UPDATED_EVENT,
+  fetchMyTrips,
+  type MyTripSummary,
+} from "@/lib/trips-client";
 
 export default function Home() {
-  const router = useRouter();
-  const [tripName, setTripName] = useState("");
-  const [joinCode, setJoinCode] = useState("");
-  const [busy, setBusy] = useState<"create" | "join" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const [showOnboardingCue, setShowOnboardingCue] = useState(false);
+  const [myTrips, setMyTrips] = useState<MyTripSummary[]>([]);
+  const [myTripsLoading, setMyTripsLoading] = useState(false);
 
-  const createTrip = useCallback(async () => {
-    setError(null);
-    setBusy("create");
-    try {
-      const res = await fetch("/api/trips", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: tripName.trim() || "Family trip" }),
-      });
-      let j: { id?: string; error?: string };
-      try {
-        j = (await res.json()) as { id?: string; error?: string };
-      } catch {
-        setError(
-          "The server returned an invalid response. If you opened this site from a phone using the Network URL, set NEXT_DEV_ALLOWED_ORIGINS in .env to your computer’s IP and restart `npm run dev`."
-        );
-        return;
-      }
-      if (!res.ok) {
-        setError(j.error ?? "Could not create trip.");
-        return;
-      }
-      if (j.id) router.push(`/trip/${j.id}`);
-    } catch {
-      setError(
-        "Could not reach the server. Use http://localhost:3000 on this Mac, or add your LAN IP to NEXT_DEV_ALLOWED_ORIGINS (see .env.example) and restart the dev server."
-      );
-    } finally {
-      setBusy(null);
+  const loadMyTrips = useCallback(async () => {
+    if (!user) {
+      setMyTrips([]);
+      return;
     }
-  }, [router, tripName]);
+    setMyTripsLoading(true);
+    try {
+      const list = await fetchMyTrips();
+      setMyTrips(list ?? []);
+    } finally {
+      setMyTripsLoading(false);
+    }
+  }, [user]);
 
-  const joinTrip = useCallback(async () => {
-    setError(null);
-    setBusy("join");
-    try {
-      const code = joinCode.trim().toUpperCase();
-      const res = await fetch(
-        `/api/trips/by-code?code=${encodeURIComponent(code)}`
-      );
-      let j: { id?: string; error?: string };
-      try {
-        j = (await res.json()) as { id?: string; error?: string };
-      } catch {
-        setError(
-          "Bad response from server. Try http://localhost:3000 or fix NEXT_DEV_ALLOWED_ORIGINS (see .env)."
+  useEffect(() => {
+    void loadMyTrips();
+  }, [loadMyTrips]);
+
+  useEffect(() => {
+    const onUpdate = () => void loadMyTrips();
+    window.addEventListener(MY_TRIPS_UPDATED_EVENT, onUpdate);
+    return () => window.removeEventListener(MY_TRIPS_UPDATED_EVENT, onUpdate);
+  }, [loadMyTrips]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refreshCue = () => {
+      void (async () => {
+        if (authLoading) return;
+        if (!user) {
+          if (cancelled) return;
+          setShowOnboardingCue(
+            !isSessionActive() && !isOnboardingPromptDismissed()
+          );
+          return;
+        }
+        const p = await fetchProfile();
+        if (cancelled) return;
+        const incomplete = !p?.onboardingCompletedAt;
+        setShowOnboardingCue(
+          incomplete && !isOnboardingPromptDismissed()
         );
-        return;
-      }
-      if (!res.ok) {
-        setError(j.error ?? "Could not find that code.");
-        return;
-      }
-      if (j.id) router.push(`/trip/${j.id}`);
-    } catch {
-      setError(
-        "Could not reach the server. Use localhost:3000 on this machine, or configure NEXT_DEV_ALLOWED_ORIGINS for your LAN IP."
-      );
-    } finally {
-      setBusy(null);
-    }
-  }, [router, joinCode]);
+      })();
+    };
+    refreshCue();
+    window.addEventListener(PROFILE_SESSION_EVENT, refreshCue);
+    window.addEventListener("storage", refreshCue);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(PROFILE_SESSION_EVENT, refreshCue);
+      window.removeEventListener("storage", refreshCue);
+    };
+  }, [authLoading, user]);
 
   return (
     <div className="relative flex min-h-full flex-1 flex-col">
@@ -82,73 +82,111 @@ export default function Home() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_60%_at_50%_-15%,rgb(255_228_230/0.45),transparent)]"
         aria-hidden
       />
-      <main className="relative mx-auto flex w-full max-w-lg flex-1 flex-col justify-center gap-10 px-4 py-16 sm:gap-12 sm:px-6">
-        <div className="flex flex-col gap-4 text-center sm:text-left">
+      <main className="relative mx-auto flex w-full max-w-lg flex-1 flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="flex flex-col gap-2 text-center sm:text-left">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-400">
-            Gather · Plan · Go
+            Gather
           </p>
-          <h1 className="font-[family-name:var(--font-source-serif)] text-[2rem] font-normal leading-tight tracking-tight text-stone-900 sm:text-[2.25rem]">
-            Plan together, compare fares
+          <h1 className="font-[family-name:var(--font-source-serif)] text-2xl font-normal tracking-tight text-stone-900 sm:text-[1.75rem]">
+            Your trips
           </h1>
-          <p className="text-base leading-[1.65] text-stone-500">
-            Start a shared trip, add each person&apos;s home airport, then see
-            what it costs everyone to fly into the same destination.
+          <p className="text-sm leading-relaxed text-stone-500">
+            Tap{" "}
+            <span className="font-semibold text-stone-700">+</span> below to
+            create a trip or join with an invite code.
           </p>
         </div>
 
-        {error ? (
-          <p
-            className="rounded-xl border border-red-100 bg-red-50/90 px-4 py-3 text-sm leading-relaxed text-red-800 shadow-sm"
-            role="alert"
-          >
-            {error}
+        {!authLoading && !user ? (
+          <p className="rounded-xl border border-stone-200/90 bg-white/80 px-4 py-3 text-center text-sm leading-relaxed text-stone-600 shadow-sm sm:text-left">
+            <Link
+              href="/login?next=%2F"
+              className="font-semibold text-rose-600 underline-offset-2 hover:underline"
+            >
+              Sign in
+            </Link>{" "}
+            to sync trips across devices. You can still use{" "}
+            <span className="font-semibold text-stone-800">+</span> as a guest.
           </p>
         ) : null}
 
-        <section className="flex flex-col gap-5 rounded-2xl border border-stone-200/80 bg-white p-6 shadow-[0_1px_3px_rgb(15_15_15/0.04),0_4px_24px_rgb(15_15_15/0.03)] sm:p-7">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-400">
-            New trip
-          </h2>
-          <label className="flex flex-col gap-2 text-sm">
-            <span className="font-medium text-stone-700">Trip name</span>
-            <input
-              value={tripName}
-              onChange={(e) => setTripName(e.target.value)}
-              placeholder="Summer reunion"
-              className={inputClass}
+        {showOnboardingCue ? (
+          <section className="relative overflow-hidden rounded-2xl border border-rose-100/90 bg-gradient-to-br from-white via-rose-50/40 to-white p-5 shadow-[0_8px_40px_rgb(225_29_72/0.08)] sm:p-6">
+            <div
+              className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-rose-200/35 blur-2xl"
+              aria-hidden
             />
-          </label>
-          <button
-            type="button"
-            disabled={busy !== null}
-            onClick={() => void createTrip()}
-            className="rounded-xl bg-rose-600 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-700 disabled:opacity-45"
-          >
-            {busy === "create" ? "Creating…" : "Create trip"}
-          </button>
-        </section>
+            <div className="relative flex flex-col gap-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-rose-700/80">
+                Personalize
+              </p>
+              <h2 className="font-[family-name:var(--font-source-serif)] text-lg font-normal leading-snug text-stone-900">
+                {user
+                  ? "Finish your travel profile"
+                  : "Set up your profile in about a minute"}
+              </h2>
+              <p className="text-sm leading-relaxed text-stone-600">
+                We&apos;ll remember your home airport and household so joining a
+                trip is one tap.
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Link
+                  href="/onboarding"
+                  className="inline-flex items-center justify-center rounded-xl bg-rose-600 px-5 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
+                >
+                  {user ? "Continue setup" : "Start setup"}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    dismissOnboardingPrompt();
+                    setShowOnboardingCue(false);
+                  }}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-stone-500 underline-offset-4 hover:text-stone-700 hover:underline"
+                >
+                  Maybe later
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : null}
 
-        <section className="flex flex-col gap-5 rounded-2xl border border-stone-200/80 bg-white p-6 shadow-[0_1px_3px_rgb(15_15_15/0.04),0_4px_24px_rgb(15_15_15/0.03)] sm:p-7">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-400">
-            Join a trip
-          </h2>
-          <label className="flex flex-col gap-2 text-sm">
-            <span className="font-medium text-stone-700">Invite code</span>
-            <input
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder="e.g. K7M2NP9Q"
-              className={`${inputClass} font-mono tracking-[0.2em]`}
-            />
-          </label>
-          <button
-            type="button"
-            disabled={busy !== null}
-            onClick={() => void joinTrip()}
-            className="rounded-xl border border-stone-200 bg-stone-50/80 py-3 text-sm font-semibold text-stone-800 shadow-sm transition-colors hover:border-stone-300 hover:bg-white disabled:opacity-45"
-          >
-            {busy === "join" ? "Opening…" : "Join trip"}
-          </button>
+        <section className="flex flex-col gap-4 rounded-2xl border border-stone-200/80 bg-white p-5 shadow-[0_1px_3px_rgb(15_15_15/0.04),0_4px_24px_rgb(15_15_15/0.03)] sm:p-6">
+          {user ? (
+            <>
+              {myTripsLoading ? (
+                <p className="text-sm text-stone-500">Loading your trips…</p>
+              ) : myTrips.length === 0 ? (
+                <p className="text-sm leading-relaxed text-stone-600">
+                  No trips yet. Use the{" "}
+                  <span className="font-semibold text-stone-800">+</span>{" "}
+                  button to create one or join with a code.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {myTrips.map((t) => (
+                    <li key={t.id}>
+                      <Link
+                        href={`/trip/${t.id}`}
+                        className="flex flex-col rounded-xl border border-stone-200/90 bg-stone-50/50 px-4 py-3 transition-colors hover:border-rose-200 hover:bg-rose-50/30 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <span className="font-semibold text-stone-900">
+                          {t.name.trim() || "Untitled trip"}
+                        </span>
+                        <span className="font-mono text-xs tracking-wider text-stone-500 sm:text-right">
+                          {t.shareCode}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          ) : (
+            <p className="text-sm leading-relaxed text-stone-600">
+              After you sign in, trips you create or join will appear here.
+            </p>
+          )}
         </section>
       </main>
     </div>

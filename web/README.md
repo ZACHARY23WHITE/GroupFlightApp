@@ -30,9 +30,13 @@ In [Firebase Console](https://console.firebase.google.com/) → **App Hosting**,
 
 **Root directory must be `web`** (Settings → Deployment). The repository root only has `README` / `.gitignore`; `package.json` is inside `web/`. If root is `/`, the build fails with an opaque error (e.g. Docker step exit **21**).
 
-Configure environment variables (same as `.env`) in the backend **Environment** section.
+Configure environment variables in the backend **Environment** section.
 
-**Important:** Every variable there must have a **Value** *or* a **Secret** linked. If you started adding a variable but left the value empty, delete that row — otherwise the build fails with **`Invalid apphosting.yaml`** / *“either 'value' or 'secret' field is required”*.
+**Important:** Every variable row must have a **Value** *or* a **Secret** linked. If the name is saved but the value/secret is missing, delete that row — otherwise the build fails with **`Invalid apphosting.yaml`** / *“either 'value' or 'secret' field is required”*. In Cloud Build logs, the **preparer** step prints `Final app hosting schema`: if you see `FIREBASE_PROJECT_ID` (or any custom key) with **no** `value:` or `secret:` line under it, that row is broken in the Console.
+
+**`SERPAPI_API_KEY` and the same error:** If the log shows `SERPAPI_API_KEY` with only `source: Firebase Console` and **no** `value:` or `secret:`, the Console row is invalid (common if you picked **Secret** / Secret Manager but did not finish linking an existing secret, or the value never saved). **Fix:** delete **`SERPAPI_API_KEY`**, save, then add it again using **plain value** (paste the SerpAPI key in the value field and confirm it saved). Only use the **Secret** option if you have already created a secret in Google Cloud Secret Manager and you fully select it in the form. Variables set in the Console **override** `apphosting.yaml`, so a broken Console row cannot be fixed by editing the repo alone — you must delete or correct that row.
+
+**App Hosting and the Admin SDK:** Firebase injects **`FIREBASE_CONFIG`** (includes `projectId`) at build and runtime. The server uses **Application Default Credentials** on App Hosting, so you typically **do not** need `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, or `FIREBASE_PRIVATE_KEY` in the Console — and leaving them as empty placeholders causes the error above. Remove those three unless you intentionally use explicit service-account env vars. Add **`SERPAPI_API_KEY`** only if you want live flight prices, using a **saved** plain value or a **fully linked** secret as above.
 
 `next.config.ts` uses **`output: 'standalone'`**, which Firebase App Hosting / Cloud Run expects for Next.js.
 

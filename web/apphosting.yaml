@@ -1,0 +1,46 @@
+# Firebase App Hosting — env for Cloud Build + Cloud Run.
+# Console → Environment overrides these if the same keys are set there.
+# https://firebase.google.com/docs/app-hosting/configure#environment-variables
+
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyAA4WfQj646w6UXiRZXZkgmrmD-3I5rYj8
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: grouptripplannerapp.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: grouptripplannerapp
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: grouptripplannerapp.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "179966238714"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:179966238714:web:3f6803ad08ce241a550e43"
+    availability:
+      - BUILD
+      - RUNTIME
+  # Server-side API routes (Firestore Admin). ADC on Cloud Run usually suffices;
+  # set explicitly if logs show missing project:
+  - variable: FIREBASE_PROJECT_ID
+    value: grouptripplannerapp
+    availability:
+      - BUILD
+      - RUNTIME
