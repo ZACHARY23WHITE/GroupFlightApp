@@ -495,10 +495,15 @@ function StepTravelDefaults({
   onBack: () => void; onNext: () => void; error: string | null;
 }) {
   const [query, setQuery] = useState(homeAirport);
+  const [expanded, setExpanded] = useState(!homeAirport);
 
-  const filtered = POPULAR_AIRPORTS.filter(
-    (a) => !query.trim() || a.code.toLowerCase().includes(query.toLowerCase()) || a.city.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 6);
+  const filtered = expanded
+    ? POPULAR_AIRPORTS.filter(
+        (a) => !query.trim() || a.code.toLowerCase().includes(query.toLowerCase()) || a.city.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 6)
+    : homeAirport
+      ? POPULAR_AIRPORTS.filter((a) => a.code === homeAirport)
+      : [];
 
   const cabins = [
     { id: "economy",         label: "Economy", emoji: "💺" },
@@ -515,33 +520,40 @@ function StepTravelDefaults({
       <div style={{ flex: 1, overflowY: "auto", padding: "12px 22px 0", display: "flex", flexDirection: "column", gap: 18 }}>
         <PipPrompt message="Where do you fly from?" mood="wink" />
 
-        {/* Airport search */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", border: `2px solid ${INK}`, borderRadius: 14, padding: "12px 14px", boxShadow: "0 3px 0 rgba(0,0,0,0.85)" }}>
-          <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="8" cy="8" r="6" stroke={INK} strokeWidth="2" fill="none" /><path d="M13 13l3 3" stroke={INK} strokeWidth="2" strokeLinecap="round" /></svg>
-          <input
-            value={query}
-            onChange={(e) => {
-              const val = e.target.value.toUpperCase().slice(0, 3);
-              setQuery(val);
-              if (/^[A-Z]{3}$/.test(val)) {
-                const found = POPULAR_AIRPORTS.find((a) => a.code === val);
-                setHomeAirport(val);
-                setHomeCity(found?.city ?? "");
-              } else {
-                setHomeAirport("");
-              }
-            }}
-            placeholder="Search city or airport code (e.g. SEA)"
-            style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: 15, fontWeight: 600, color: INK, letterSpacing: query.length === 3 ? 2 : 0 }}
-          />
-        </div>
+        {/* Airport search — only shown when picker is expanded */}
+        {expanded && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", border: `2px solid ${INK}`, borderRadius: 14, padding: "12px 14px", boxShadow: "0 3px 0 rgba(0,0,0,0.85)" }}>
+            <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="8" cy="8" r="6" stroke={INK} strokeWidth="2" fill="none" /><path d="M13 13l3 3" stroke={INK} strokeWidth="2" strokeLinecap="round" /></svg>
+            <input
+              value={query}
+              onChange={(e) => {
+                const val = e.target.value.toUpperCase().slice(0, 3);
+                setQuery(val);
+                if (/^[A-Z]{3}$/.test(val)) {
+                  const found = POPULAR_AIRPORTS.find((a) => a.code === val);
+                  setHomeAirport(val);
+                  setHomeCity(found?.city ?? "");
+                } else {
+                  setHomeAirport("");
+                }
+              }}
+              placeholder="Search city or airport code (e.g. SEA)"
+              style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: 15, fontWeight: 600, color: INK, letterSpacing: query.length === 3 ? 2 : 0 }}
+            />
+          </div>
+        )}
 
         {/* Airport list */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {filtered.map((a) => {
             const sel = homeAirport === a.code;
             return (
-              <button type="button" key={a.code} onClick={() => { setHomeAirport(a.code); setHomeCity(a.city); setQuery(a.code); }} style={{
+              <button type="button" key={a.code} onClick={() => {
+                setHomeAirport(a.code);
+                setHomeCity(a.city);
+                setQuery(a.code);
+                setExpanded(false);
+              }} style={{
                 display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
                 border: `2px solid ${sel ? ACCENT : INK}`,
                 background: sel ? `${ACCENT}14` : "#fff",
@@ -562,6 +574,19 @@ function StepTravelDefaults({
               </button>
             );
           })}
+          {!expanded && homeAirport && (
+            <button type="button" onClick={() => { setExpanded(true); setQuery(""); }} style={{
+              background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit",
+              fontSize: 13, fontWeight: 700, color: ACCENT, textAlign: "left", padding: "4px 0",
+            }}>
+              Change airport →
+            </button>
+          )}
+          {expanded && !homeAirport && (
+            <p style={{ fontSize: 13, color: "rgba(15,20,25,0.5)", margin: 0, fontWeight: 500 }}>
+              Select from the list or type a 3-letter code above.
+            </p>
+          )}
         </div>
 
         {/* Party size */}
@@ -768,6 +793,17 @@ export function OnboardingFlow() {
     router.push(returnTo.startsWith("/") ? returnTo : "/");
   }, [displayName, email, phone, homeAirport, homeCity, familyAdults, familyChildren, preferredCabin, profilePhotoDataUrl, smsUpdatesOptIn, router, returnTo, user?.email]);
 
+  // Lock body scroll while onboarding is mounted (fixes iOS touch-scroll bleed-through)
+  useEffect(() => {
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = prev;
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   if (authLoading || !user) {
     return <SubmitHangarOverlay open message={authLoading ? "Loading…" : "Redirecting to sign in…"} />;
   }
@@ -816,9 +852,11 @@ export function OnboardingFlow() {
     <>
       <div style={{
         position: "fixed", inset: 0, zIndex: 100,
+        height: "100dvh",
         background: CREAM,
         fontFamily: "var(--font-plus-jakarta-sans), system-ui, sans-serif",
         color: INK, overflow: "hidden", display: "flex", flexDirection: "column",
+        overscrollBehavior: "none",
       }}>
         {/* Screen content with slide transition */}
         <div
